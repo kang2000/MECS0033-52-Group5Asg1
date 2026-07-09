@@ -21,7 +21,7 @@ const demo = read("DEMO_SCRIPT.md");
 const manual = read("ADMIN_MANUAL.md");
 
 assert(index.includes("Staff Demo"), "index.html should label the in-app control tab as Staff Demo.");
-assert(index.includes("Staff / Demo Control"), "index.html should title the in-app control screen as Staff / Demo Control.");
+assert(index.includes("Staff Control Panel"), "index.html should title the in-app control screen as Staff Control Panel.");
 assert(!index.includes("<span>Admin</span>"), "index.html should not label the bottom tab Admin.");
 assert(!index.includes("Admin / Transport Staff"), "index.html should not title the in-app screen Admin / Transport Staff.");
 

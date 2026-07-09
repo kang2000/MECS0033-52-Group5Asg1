@@ -3,10 +3,10 @@
  * -----------------------------------------------------------------------------
  * The data layer of the prototype (report section 4.4 "Knowledge Repository").
  *
- *  ⚠ PROTOTYPE SAMPLE DATA. Routes, stops and timetables below are plausible
- *    UTM-style demo data created for this proof-of-concept. They are NOT the
- *    official UTM shuttle schedule. In a production system an administrator
- *    would replace this object with verified data (see ADMIN_MANUAL.md).
+ *  Data boundary: route labels and stop sequences are aligned to public
+ *  UTM/DVC/KDOJ listings where available. Current operation, timetable,
+ *  headway, ETA and walking notes are prototype simulation and must not be
+ *  presented as the official live UTM shuttle schedule.
  *
  *  Everything is held in a single global `KB` object so the app also runs by
  *  opening index.html directly from disk (file://), with no server and no
@@ -17,8 +17,8 @@ const KB = {
   meta: {
     campus: "UTM Johor Bahru",
     dataKind: "PUBLIC ROUTE NAMES + PROTOTYPE TIMING",
-    lastUpdated: "Public route sources checked 30 May 2026",
-    sourceNote: "Route names and stop sequences use public UTM/KDOJ route listings where available. Timetable times, walking notes and ETA values are prototype simulations for demonstration.",
+    lastUpdated: "Public route sources checked 2 July 2026",
+    sourceNote: "Route names and stop sequences use public UTM/DVC/KDOJ route listings where available. Timetable, walking notes and ETA values use configured campus shuttle estimates for this assistant.",
     sourceUrls: [
       "https://dvcdev.utm.my/announcement/shuttle-bus-schedule/",
       "https://www.kdoj.com.my/insight/utm-bus-schedule/",
@@ -27,7 +27,7 @@ const KB = {
   },
 
   /* Demo clock. Default to a morning class time so the presentation does not
-     depend on the real current time. Admin can switch to live time or another
+     depend on the real current time. Staff Demo can switch to live time or another
      fixed time. */
   clock: {
     mode: "demo",
@@ -86,7 +86,7 @@ const KB = {
       status: "public route stop label",
       landmark: "Appears in KDOJ/KDSE public route listings.",
       facilities: ["Residential area"],
-      walking: "Prototype walking note; confirm the exact shelter on campus signage." },
+      walking: "Confirm the exact shelter on campus signage." },
 
     { id: "kdse", name: "KDSE",
       aliases: ["kdse", "kolej datin seri endon", "seri endon"],
@@ -170,7 +170,7 @@ const KB = {
       status: "verified campus landmark; route stop unverified",
       landmark: "UTM Library lists Perpustakaan Sultanah Zanariah at UTM Johor Bahru.",
       facilities: ["Study spaces", "Library services"],
-      walking: "Prototype landmark only: no verified public shuttle route stop was found for PSZ, so the app will not invent a direct route." }
+      walking: "Landmark note: no verified public shuttle route stop was found for PSZ, so the app will not invent a direct route." }
   ],
 
   /* ---- Shuttle routes --------------------------------------------------- */
@@ -181,50 +181,50 @@ const KB = {
     { id: "route_a", name: "BAS A1/A2 — KP to Lingkaran Ilmu", color: "#1f6fd6",
       stops: ["kp", "cp", "jln_amal", "kp"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KP → CP → JLN AMAL → KP. Timings are simulated for POC demo.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route sequence: KP → CP → JLN AMAL → KP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_b", name: "BAS B1/B2/B3 — KP/K9/K10 to Cluster", color: "#c0392b",
       stops: ["kp", "k9k10", "t02", "t08", "k9k10", "kp"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KP → K9/K10 → T02 → T08 → K9/K10 → KP. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route sequence: KP → K9/K10 → T02 → T08 → K9/K10 → KP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_c", name: "BAS C1/C2/C3 — K9/K10 to Lingkaran Ilmu", color: "#27a05a",
       stops: ["k9k10", "ktc", "cp", "jln_amal", "ktc", "k9k10"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: K9/K10 → KTC → CP → JLN AMAL → KTC → K9/K10. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route sequence: K9/K10 → KTC → CP → JLN AMAL → KTC → K9/K10. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_d", name: "BAS D1/D2 — KDOJ to Lingkaran Ilmu", color: "#7a0c2e",
       stops: ["kdoj", "klg", "kdse", "pku", "cp", "jln_amal", "kdoj"],
       operating: { start: "07:00", end: "18:30" }, headway: 30,
-      note: "Public route sequence: KDOJ → KLG → KDSE → PKU → CP → JLN AMAL → KDOJ. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route sequence: KDOJ → KLG → KDSE → PKU → CP → JLN AMAL → KDOJ. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_e", name: "BAS E1/E2 — KDOJ/KL6/KDSE to Cluster", color: "#8e44ad",
       stops: ["kdoj", "klg", "kdse", "cp", "n24", "ktc", "t02", "t08"],
       operating: { start: "07:00", end: "18:30" }, headway: 30,
-      note: "Public route lists KDOJ/KL6/KDSE to Cluster T02/T08 via CP, N24 and KTC. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route lists KDOJ/KL6/KDSE to Cluster T02/T08 via CP, N24 and KTC. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_f", name: "BAS F1/F2/F3 — KTR/KTHO/KTDI to Lingkaran Ilmu", color: "#e67e22",
       stops: ["ktr", "ktho", "ktdi", "jln_amal", "cp", "ktr"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KTR → KTHO → KTDI → JLN AMAL → CP → KTR. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route sequence: KTR → KTHO → KTDI → JLN AMAL → CP → KTR. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_g", name: "BAS G1/G2/G3 — KTR/KTHO/KTDI to SKT", color: "#16a085",
       stops: ["ktr", "ktho", "ktdi", "n24", "skt", "p19", "cp"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KTR/KTHO/KTDI to SKT via N24, SKT, P19 and CP. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." },
+      note: "Public route sequence: KTR/KTHO/KTDI to SKT via N24, SKT, P19 and CP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_h", name: "BAS H — CP to V01 (Taman U)", color: "#2c3e50",
       stops: ["cp", "jln_amal", "v01", "cp"],
       operating: { start: "07:00", end: "18:30" }, headway: 30,
-      note: "Public route sequence: CP → JLN AMAL → V01 → CP. Timings are simulated.",
-      source: "KDOJ public UTM Bus Schedule route list; timing simulated." }
+      note: "Public route sequence: CP → JLN AMAL → V01 → CP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." }
   ],
 
   /* ---- Frequently asked questions -------------------------------------- */
@@ -237,7 +237,7 @@ const KB = {
       a: "Shuttles run on a reduced timetable on weekends and may be suspended on public holidays. Check the Alerts screen for the latest notice." },
     { q: "How often do the buses come?",
       keywords: ["how often", "frequency", "interval", "headway", "berapa kerap"],
-      a: "Route A runs every 15 minutes, Route B every 20 minutes, and Route C every 30 minutes during operating hours." },
+      a: "Most configured shuttle groups use a 20-minute headway, while BAS D/E/H use 30 minutes. Check the Alerts screen for route-specific updates." },
     { q: "Where can I report a problem?",
       keywords: ["report", "complain", "feedback", "problem", "wrong", "lapor", "aduan"],
       a: "Use the Feedback / Escalate screen to report wrong information or a missed bus. The report is logged for transport staff follow-up." }
@@ -248,8 +248,14 @@ const KB = {
   subscriptions: [
     { user: "ali", route: "route_a" }
   ],
-  /* Delayed(r) facts, toggled from the Admin panel. */
+  /* Delayed(r) facts, toggled from the Staff Demo panel. */
   delayedRoutes: [],
+  /* Delay duration used by the Staff Demo. This is deliberately a simulation,
+     not a live GPS prediction. */
+  delayPolicy: {
+    defaultMins: 12,
+    label: "staff delay report"
+  },
   /* Logged feedback / escalations (Feedback screen). */
   feedbackLog: []
 };
@@ -324,7 +330,7 @@ const KBUtil = {
     KB.clock.label = label || (mode === "live" ? "Live device time" : "Custom demo time");
   },
 
-  /* Next departure for a route at a stop. Returns {time, minsAway, operating}.
+  /* Next departure for a route at a stop. Returns schedule + simulated delay.
      Buses leave the route origin every `headway` mins from start..end; the
      offset to a stop is its index position in the sequence (1 min/stop demo). */
   nextDeparture(route, stopId) {
@@ -332,26 +338,40 @@ const KBUtil = {
     const end   = this.toMinutes(route.operating.end);
     const offset = Math.max(0, route.stops.indexOf(stopId));
     const now = this.nowMinutes();
+    const delayMins = this.delayMinutes(route.id);
 
     // Build today's departure times at this stop.
     const times = [];
     for (let t = start; t <= end; t += route.headway) times.push(t + offset);
 
+    const withTiming = (scheduled, minsAway, operating) => {
+      const estimated = scheduled + delayMins;
+      return {
+        operating,
+        delayed: delayMins > 0,
+        delayMins,
+        delayLabel: KB.delayPolicy.label,
+        time: this.fmt(scheduled),
+        scheduledTime: this.fmt(scheduled),
+        estimatedTime: this.fmt(estimated),
+        minsAway,
+        estimatedMinsAway: minsAway == null ? null : Math.max(0, estimated - now),
+        first: this.fmt(times[0]),
+        last: this.fmt(times[times.length - 1]),
+        firstEstimated: this.fmt(times[0] + delayMins),
+        lastEstimated: this.fmt(times[times.length - 1] + delayMins),
+        serviceWindow: `${route.operating.start}–${route.operating.end}`,
+        frequency: `Every ${route.headway} min`,
+        timeBasis: this.clockSummary()
+      };
+    };
+
     const upcoming = times.filter(t => t >= now);
     if (now > end + offset) {
-      return { operating: false, time: this.fmt(times[0]),
-               minsAway: null, first: this.fmt(times[0]), last: this.fmt(times[times.length - 1]),
-               timeBasis: this.clockSummary() };
+      return withTiming(times[0], null, false);
     }
     const time = upcoming.length ? upcoming[0] : times[0];
-    return {
-      operating: now >= start && now <= end + offset,
-      time: this.fmt(time),
-      minsAway: upcoming.length ? time - now : null,
-      first: this.fmt(times[0]),
-      last: this.fmt(times[times.length - 1]),
-      timeBasis: this.clockSummary()
-    };
+    return withTiming(time, upcoming.length ? time - now : null, now >= start && now <= end + offset);
   },
 
   /* Subscription / delay / feedback mutators (used by app + resolution). */
@@ -365,6 +385,9 @@ const KBUtil = {
     KB.subscriptions = KB.subscriptions.filter(s => !(s.user === user && s.route === routeId));
   },
   isDelayed(routeId)  { return KB.delayedRoutes.includes(routeId); },
+  delayMinutes(routeId) {
+    return this.isDelayed(routeId) ? KB.delayPolicy.defaultMins : 0;
+  },
   setDelayed(routeId, on) {
     if (on && !this.isDelayed(routeId)) KB.delayedRoutes.push(routeId);
     if (!on) KB.delayedRoutes = KB.delayedRoutes.filter(r => r !== routeId);

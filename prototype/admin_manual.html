@@ -1,171 +1,323 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
+<html lang="en"><head><meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TransitAI UTM — Administrator Manual</title>
+<title>TransitAI UTM - Administrator Manual</title>
 <style>
-  :root{--maroon:#7a0c2e;--gold:#f2a900;--ink:#1e2330;--muted:#5b6270;--line:#e3e6ec}
-  *{box-sizing:border-box}
-  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    color:var(--ink);max-width:860px;margin:0 auto;padding:40px 28px;line-height:1.6}
-  header{border-bottom:4px solid var(--gold);padding-bottom:14px;margin-bottom:24px}
-  h1{color:var(--maroon);margin:0 0 4px;font-size:26px}
-  .sub{color:var(--muted);font-size:14px}
-  h2{color:var(--maroon);margin-top:30px;border-left:5px solid var(--gold);padding-left:10px;font-size:19px}
-  h3{margin-top:20px;font-size:15px}
-  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px}
-  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
-  th{background:#faf2e2;color:#5c0922}
-  code{background:#f3f4f8;border-radius:4px;padding:1px 5px;font-size:12.5px}
-  pre{background:#0f1320;color:#dbe2f2;padding:14px;border-radius:8px;overflow-x:auto;font-size:12.5px}
-  .note{background:#fff8e6;border:1px solid #ecd98a;border-radius:8px;padding:10px 14px;font-size:13.5px}
-  .flow{background:#0f1320;color:#9fe6c0;padding:14px;border-radius:8px;font-size:12.5px;white-space:pre}
-  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:12px}
-  @media print{body{padding:0}h2{break-after:avoid}}
-</style>
-</head>
-<body>
-<header>
-  <h1>TransitAI UTM — Administrator Manual</h1>
-  <div class="sub">Web-Based Campus Transport Chatbot (Prototype) ·
-    MECS0033-52 Artificial Intelligence · Group 5</div>
-</header>
-
-<p class="note"><strong>Scope.</strong> This manual documents the prototype's
-components, configuration and operating procedures (project rubric: Admin Manual
-criterion). The prototype is fully client-side — HTML + CSS + vanilla JavaScript,
-with the knowledge base embedded in <code>js/kb.js</code>. No server, database,
-API key, or build step. Public route names/sequences are aligned to public
-UTM/KDOJ route listings where available; timetable/ETA values and missing
-landmark mappings are labelled <strong>prototype simulation</strong>.</p>
-
-<h2>1. Overview</h2>
-<p>TransitAI UTM answers UTM campus shuttle questions, reproducing the report's
-AI pipeline: <strong>intent recognition → knowledge retrieval (RAG-style) →
-response generation</strong>, plus a <strong>resolution-refutation</strong>
-engine for delay notifications.</p>
-
-<h2>2. Component (library/function) map</h2>
-<p>No third-party libraries — only native browser APIs. Six JavaScript modules:</p>
-<table>
-  <tr><th>Module</th><th>Global</th><th>Key functions</th><th>Responsibility</th></tr>
-  <tr><td><code>js/kb.js</code></td><td><code>KB</code>, <code>KBUtil</code></td>
-    <td>findStop, findStops, routesServing, routesBetween, nextDeparture, subscribe, setDelayed, logFeedback</td>
-    <td>Knowledge repository (data layer) + helpers</td></tr>
-  <tr><td><code>js/intent.js</code></td><td><code>Intent</code></td>
-    <td>classify(query)</td><td>Intent recognition, 6 intents (rules 7–9)</td></tr>
-  <tr><td><code>js/retriever.js</code></td><td><code>Retriever</code></td>
-    <td>retrieve(query, k)</td><td>RAG-style retrieval + source note</td></tr>
-  <tr><td><code>js/resolution.js</code></td><td><code>Resolution</code></td>
-    <td>prove(user, route)</td><td>Resolution-refutation engine (Fig 5.2)</td></tr>
-  <tr><td><code>js/chat.js</code></td><td><code>Chat</code></td>
-    <td>send(text), init()</td><td>Conversation controller + session memory</td></tr>
-  <tr><td><code>js/app.js</code></td><td><code>App</code></td>
-    <td>showScreen, showStop, renderAlerts, renderAdmin, runProof</td>
-    <td>Screen routing + Staff Demo/Alerts/Feedback/Stop</td></tr>
-</table>
-<p><strong>Load order</strong> (in <code>index.html</code>):
-<code>kb → intent → retriever → resolution → chat → app</code>.</p>
-<div class="flow">user text
-  → Intent.classify()      (1) detect intent + confidence
-  → Retriever.retrieve()   (2) fetch top KB chunks + source note
-  → per-intent handler     (3) build grounded response (card/message)
-  → memory + explain panel  (   update context + transparency panel)</div>
-
-<h2>3. Data source and accuracy policy</h2>
-<table>
-  <tr><th>Data shown</th><th>Status</th><th>How to explain it</th></tr>
-  <tr><td>BAS A/B/C/D/E/F/G/H route labels and stop sequences</td><td>Public route listing aligned</td><td>Used from public UTM/KDOJ route listings where available.</td></tr>
-  <tr><td>Stop labels such as CP, KTDI, N24, P19, T02, T08</td><td>Public route stop labels</td><td>Used because they appear in public route listings.</td></tr>
-  <tr><td>FKE and FC aliases</td><td>Partially verified / prototype mapping</td><td>FKE maps to P19 area; FC maps to N24 cluster for demo because exact faculty-stop mapping was not found.</td></tr>
-  <tr><td>Next departure, operating hours, headway, ETA</td><td>Prototype simulation</td><td>Used to demonstrate AI response flow and repeatable demo-time behavior.</td></tr>
-  <tr><td>Delay alerts</td><td>Prototype simulation</td><td>Staff Demo toggle simulates staff publishing a disruption.</td></tr>
-</table>
-<p><strong>Sources checked:</strong> UTM DVC Development shuttle schedule page,
-KDOJ UTM Bus Schedule route list, and the public UTM JB 2025 timetable PDF.</p>
-
-<h2>4. Configuration notes</h2>
-<p>All configuration is plain data in <code>js/kb.js</code>. Edit, save, reload
-the browser — no rebuild.</p>
-<h3>4.1 Add / edit a bus stop (<code>KB.stops</code>)</h3>
-<pre>{ id: "fkm", name: "FKM (Faculty of Mechanical Engineering)",
-  aliases: ["fkm", "mechanical", "mekanikal"],
-  status: "prototype mapping",
-  landmark: "FKM main block.",
-  facilities: ["Lecture halls", "Café"],
-  walking: "Stop is at the FKM drop-off bay." }</pre>
-<h3>4.2 Add / edit a route (<code>KB.routes</code>)</h3>
-<pre>{ id: "route_g", name: "BAS G1/G2/G3 — KTR/KTHO/KTDI to SKT",
-  stops: ["ktr", "ktho", "ktdi", "n24", "skt", "p19", "cp"],
-  operating: { start: "07:00", end: "18:30" }, // simulated
-  headway: 20,
-  note: "Public route sequence; timings are simulated.",
-  source: "KDOJ public UTM Bus Schedule route list; timing simulated." }</pre>
-<p>Timetable times are derived from <code>operating</code> + <code>headway</code>
-by <code>nextDeparture()</code> for a repeatable POC.</p>
-<h3>4.3 FAQ / 4.4 Intents / 4.5 Subscriptions</h3>
-<ul>
-  <li><strong>FAQ:</strong> add <code>{q, keywords, a}</code> to <code>KB.faqs</code>.</li>
-  <li><strong>Intents:</strong> edit the <code>CUES</code> table in
-    <code>js/intent.js</code> (strong = 2 pts, weak = 1 pt). Keep ultra-common
-    words out of <code>strong</code>.</li>
-  <li><strong>Subscriptions:</strong> <code>KB.subscriptions</code> holds
-    <code>WantsRouteAlert(user, route)</code>; demo user is <code>ali</code>
-    (<code>Chat.DEMO_USER</code>).</li>
-</ul>
-<h3>4.6 Demo time control</h3>
-<p>The app defaults to <code>10:00</code> so schedule cards do not depend on the
-real current time. In Staff Demo, choose 08:00, 10:00, 13:00, 17:30, 20:30, or Live
-device time.</p>
-
-<h2>5. Operating procedure — delay alert with logic proof</h2>
+body{font-family:Arial,Helvetica,sans-serif;color:#000;max-width:980px;margin:0 auto;padding:32px;line-height:1.45}
+h1,h2,h3{color:#000} h1{text-align:center} table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+th,td{border:1px solid #000;padding:7px;vertical-align:top;text-align:left;background:#fff;color:#000}
+pre,code{font-family:'Courier New',monospace;color:#000} pre{border:1px solid #000;padding:10px;white-space:pre-wrap}
+figure{margin:18px 0;text-align:center;break-inside:avoid} figure img{max-width:100%;border:1px solid #000}
+figcaption{font-size:12px;margin-top:6px;color:#000;font-style:italic}.title-note{text-align:center}
+@media print{body{padding:0}figure{page-break-inside:avoid}}
+</style></head><body>
+<h1>TransitAI UTM<br>Administrator Manual</h1>
+<p class="title-note">Web-Based Campus Transport Chatbot Prototype<br>MECS0033-52 Artificial Intelligence, Section 52, Group 5</p>
+<p>This is the separate Administrator Manual deliverable. The in-app Staff Demo screen is a control surface for demonstration and proof execution; it does not replace this Word manual.</p>
+<table><thead><tr>
+<th>Manual item</th>
+<th>Description</th>
+</tr></thead><tbody>
+<tr>
+<td>Audience</td>
+<td>Lecturer, marker, transport administrator, or maintainer reviewing the prototype.</td>
+</tr>
+<tr>
+<td>Prototype path</td>
+<td>MECS0033-52/Group5Asg1/prototype/index.html</td>
+</tr>
+<tr>
+<td>Run mode</td>
+<td>Open index.html directly, or run python3 -m http.server 8000 from the prototype folder.</td>
+</tr>
+<tr>
+<td>Main grading evidence</td>
+<td>Interactive screen, problem-solving workflow, administrator process, screenshots, and resolution proof.</td>
+</tr>
+<tr>
+<td>Data boundary</td>
+<td>Public route names/stop sequences are used where available; timetable, ETA, delay state and walking notes are configured prototype estimates.</td>
+</tr>
+</tbody></table>
+<h2>1. Purpose and Rubric Alignment</h2>
+<p>TransitAI UTM turns the project report into an inspectable browser prototype. The marker can click through the phone-style app, ask transport questions, change demo time, create feedback reports, toggle staff delays, and inspect the AI reasoning evidence.</p>
+<table><thead><tr>
+<th>Rubric criterion</th>
+<th>How the prototype supports full marks</th>
+<th>Where to verify</th>
+</tr></thead><tbody>
+<tr>
+<td>Originality / Interactive Screen</td>
+<td>Home navigation, chatbot input, intent confidence, RAG-style evidence, timetable search, full-day route timetable, subscription-filtered alerts, feedback escalation, Staff Control Panel, and visible AI pipeline.</td>
+<td>Figures 1-13; index.html</td>
+</tr>
+<tr>
+<td>Problem Solving</td>
+<td>Addresses common campus transport pain points: route planning, next bus timing, arrival estimate, stop lookup, service delay notification, and passenger issue reporting.</td>
+<td>Chat, Timetable, Alerts, Feedback</td>
+</tr>
+<tr>
+<td>Admin Manual</td>
+<td>Explains component map, truthful data policy, configuration, operating steps, proof procedure, troubleshooting, and screenshot-guided usage.</td>
+<td>This ADMIN_MANUAL.docx</td>
+</tr>
+</tbody></table>
+<h2>2. Architecture and Component Map</h2>
+<p>The prototype is deliberately self-contained: HTML, CSS and vanilla JavaScript only. There is no Firebase, no server, no API key and no build step. This is appropriate for a 10 percent proof of concept because the AI workflow is visible and repeatable during marking.</p>
+<table><thead><tr>
+<th>File</th>
+<th>Main object</th>
+<th>Important functions</th>
+<th>Responsibility</th>
+</tr></thead><tbody>
+<tr>
+<td>js/kb.js</td>
+<td>KB, KBUtil</td>
+<td>findStop, findStops, routesServing, routesBetween, nextDeparture, setClock, subscribe, setDelayed, logFeedback</td>
+<td>Knowledge base, route/stop lookup, directional route matching, timetable estimates, subscriptions, delays and feedback state.</td>
+</tr>
+<tr>
+<td>js/intent.js</td>
+<td>Intent</td>
+<td>classify(query)</td>
+<td>Scores six major intents and exposes confidence in the UI.</td>
+</tr>
+<tr>
+<td>js/retriever.js</td>
+<td>Retriever</td>
+<td>retrieve(query, k)</td>
+<td>RAG-style token retrieval over stops, routes, FAQs, alerts and source notes.</td>
+</tr>
+<tr>
+<td>js/resolution.js</td>
+<td>Resolution</td>
+<td>prove(user, route)</td>
+<td>First-order resolution-refutation proof for NotifyUser(user, route, delay).</td>
+</tr>
+<tr>
+<td>js/chat.js</td>
+<td>Chat</td>
+<td>send(text), init()</td>
+<td>Conversation controller, session memory, response cards and AI pipeline updates.</td>
+</tr>
+<tr>
+<td>js/app.js</td>
+<td>App</td>
+<td>showScreen, showStop, showRouteTimetable, renderAlerts, renderAdmin, runProof</td>
+<td>Screen routing, timetable, Alerts, Feedback, Staff Control Panel and proof display.</td>
+</tr>
+</tbody></table>
+<p>Runtime flow: user question -&gt; Intent.classify() -&gt; Retriever.retrieve() -&gt; per-intent response handler -&gt; grounded UI card + AI pipeline panel. Staff delay flow: Staff Control Panel toggle -&gt; KBUtil.setDelayed() -&gt; Resolution.prove() -&gt; Alerts screen for subscribed users only.</p>
+<h2>3. Data Source and Accuracy Policy</h2>
+<p>Use this explanation during presentation: route names and stop sequences are aligned to public UTM/DVC/KDOJ sources where available. Timetable, ETA, delay duration, operating state and walking notes are configured estimates for demonstrating the AI concept, because no verified live UTM shuttle feed is connected.</p>
+<table><thead><tr>
+<th>Data shown</th>
+<th>Status</th>
+<th>Administrator explanation</th>
+</tr></thead><tbody>
+<tr>
+<td>BAS A/B/C/D/E/F/G/H route labels and stop sequences</td>
+<td>Public-list aligned</td>
+<td>Used as route/sequence reference where public UTM/DVC/KDOJ listings are available. Do not claim they prove current live operation.</td>
+</tr>
+<tr>
+<td>Stop labels such as CP, KP, K9/K10, KTC, KDOJ, KDSE, KTDI, N24, SKT, P19, T02, T08, V01</td>
+<td>Public stop labels</td>
+<td>Used as route-stop codes because they appear in public route listings.</td>
+</tr>
+<tr>
+<td>FKE mapping</td>
+<td>Partially verified</td>
+<td>Mapped to P19 / FKE Area because public listings include P19 and FKE-area stop references. Production should confirm exact shelter.</td>
+</tr>
+<tr>
+<td>FC mapping</td>
+<td>Prototype alias</td>
+<td>Mapped to N24 / Cluster Area for the report demo. Exact current FC shuttle-stop mapping was not found.</td>
+</tr>
+<tr>
+<td>PSZ Library</td>
+<td>Landmark only</td>
+<td>The app can identify PSZ as a campus landmark, but it does not invent a direct shuttle route to PSZ.</td>
+</tr>
+<tr>
+<td>Next bus, full-day timetable, service window, ETA and delay duration</td>
+<td>Prototype estimate</td>
+<td>Calculated from configured operating windows/headways and demo time. Not an official live timetable.</td>
+</tr>
+<tr>
+<td>Delay alert</td>
+<td>Prototype simulation</td>
+<td>Staff toggle simulates transport staff publishing a disruption so the logic proof and alert workflow can be shown.</td>
+</tr>
+</tbody></table>
+<p>Sources checked on 2 July 2026: UTM DVC Development shuttle bus schedule page, KDOJ UTM Bus Schedule route list, and the UTM JB 2025 shuttle timetable PDF.</p>
+<h2>4. Screenshot-Guided Operating Procedure</h2>
+<p>The following figures are current screenshots from the redesigned prototype. The arrows identify the control or evidence to point at during the presentation.</p>
+<h3>4.1 Home Screen and Navigation</h3>
 <ol>
-  <li>Open the <strong>🛠️ Staff Demo</strong> tab.</li>
-  <li>Toggle a route (e.g. BAS A1/A2 — KP to Lingkaran Ilmu) to <strong>delayed</strong>.</li>
-  <li>The proof panel runs <code>Resolution.prove("ali","route_a")</code> and
-    prints P1–P4, the negated goal, and R1→R3→⊥, proving
-    <code>NotifyUser(ali, route_a, delay)</code> (report Figure 5.2).</li>
-  <li>Open <strong>🔔 Alerts</strong> to see the user notification.</li>
-  <li>Toggle back to clear the delay.</li>
+<li>Open index.html. Confirm the phone status clock is visible at the top right.</li>
+<li>Use Home cards or the bottom tab bar to start the main workflows.</li>
+<li>Keep the AI pipeline panel visible when explaining originality.</li>
 </ol>
-<p class="note"><strong>Cannot misfire:</strong> the derivation only runs when the
-facts hold (subscribed <em>and</em> delayed); inputs come from app state, never
-from unparsed free text.</p>
-
-<h2>6. Usage guide (end-user screens)</h2>
-<table>
-  <tr><th>Screen</th><th>Reach it</th><th>Does</th></tr>
-  <tr><td>Home / Chat</td><td>default</td><td>Free-text + quick actions</td></tr>
-  <tr><td>Schedule Result</td><td>“next bus to …”</td><td>Next departure, hours, headway, source</td></tr>
-  <tr><td>Route Guidance</td><td>“from X to Y”</td><td>Direct route + stop sequence</td></tr>
-  <tr><td>Real-Time Arrival</td><td>“arrival at …”</td><td>Simulated ETA + fallback</td></tr>
-  <tr><td>Bus Stop Detail</td><td>“where is … stop”</td><td>Landmark, facilities, walking</td></tr>
-  <tr><td>Alerts</td><td>🔔 tab</td><td>Delay notices + subscriptions</td></tr>
-  <tr><td>Feedback</td><td>📝 tab</td><td>Logs an issue for staff</td></tr>
-  <tr><td>Staff Demo</td><td>🛠️ tab</td><td>Toggle delays, view proof</td></tr>
-  <tr><td>Demo time</td><td>🛠️ tab → Demo time</td><td>Change simulated time for presentation</td></tr>
-</table>
-
-<h2>7. Troubleshooting</h2>
-<table>
-  <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
-  <tr><td>Blank / no response</td><td>Scripts blocked or wrong load order</td><td>Reload; check console; ensure all <code>js/*.js</code> present</td></tr>
-  <tr><td>Schedule “closed now”</td><td>Demo/live time outside operating hours</td><td>Use Staff Demo → Demo time → 10:00 for presentation, or 20:30 to show closed service intentionally</td></tr>
-  <tr><td>Proof “not delayed”</td><td>Route not toggled / user not subscribed</td><td>Toggle route in Staff Demo; check <code>KB.subscriptions</code></td></tr>
-  <tr><td>Wrong intent</td><td>Missing cue word</td><td>Add phrase to <code>CUES</code> (§4.4)</td></tr>
-  <tr><td>Edits not showing</td><td>Browser cache</td><td>Save <code>kb.js</code> + hard-refresh</td></tr>
-</table>
-
-<h2>8. Limitations (prototype scope)</h2>
+<figure><img src="manual_screenshots_annotated/01-home-overview.png" alt="Figure 1. Home screen with demo clock, navigation cards and AI pipeline panel." /><figcaption>Figure 1. Home screen with demo clock, navigation cards and AI pipeline panel.</figcaption></figure>
+<h3>4.2 Chat Schedule Answer</h3>
+<ol>
+<li>Open Chat and ask: When is the next bus to FKE?</li>
+<li>Point to intent confidence to show the intent recognition result.</li>
+<li>Point to first bus, last bus, service window and frequency to show the app now behaves like a transport product.</li>
+<li>Explain the source boundary: public route data plus configured timetable estimate.</li>
+</ol>
+<figure><img src="manual_screenshots_annotated/02-chat-schedule.png" alt="Figure 2. Schedule card with first bus, last bus, service window, frequency and AI pipeline evidence." /><figcaption>Figure 2. Schedule card with first bus, last bus, service window, frequency and AI pipeline evidence.</figcaption></figure>
+<h3>4.3 Timetable Search and Full-Day Route Timetable</h3>
+<ol>
+<li>Open Bus Timetable.</li>
+<li>Search by route, stop or faculty alias, for example FKE.</li>
+<li>Tap the BAS G route card to open its route timetable.</li>
+<li>Scroll to show the full-day departure groups and the highlighted next bus.</li>
+</ol>
+<figure><img src="manual_screenshots_annotated/03-timetable-search.png" alt="Figure 3. Timetable search filtering routes by FKE alias." /><figcaption>Figure 3. Timetable search filtering routes by FKE alias.</figcaption></figure>
+<figure><img src="manual_screenshots_annotated/04-route-timetable-detail.png" alt="Figure 4. Route timetable summary with route direction and key timing metrics." /><figcaption>Figure 4. Route timetable summary with route direction and key timing metrics.</figcaption></figure>
+<figure><img src="manual_screenshots_annotated/04b-route-timetable-times.png" alt="Figure 5. Full-day departure grid with morning, afternoon and evening groups." /><figcaption>Figure 5. Full-day departure grid with morning, afternoon and evening groups.</figcaption></figure>
+<h3>4.4 Route Guidance</h3>
+<ol>
+<li>Ask: How do I get from KTDI to P19 FKE?</li>
+<li>Show that the route engine uses the ordered stop sequence, so origin must appear before destination.</li>
+<li>Point to the AI panel showing route_guidance intent and retrieved route/stop chunks.</li>
+</ol>
+<figure><img src="manual_screenshots_annotated/05-route-guidance.png" alt="Figure 6. Directional route guidance from KTDI to P19 / FKE Area." /><figcaption>Figure 6. Directional route guidance from KTDI to P19 / FKE Area.</figcaption></figure>
+<h3>4.5 Bus Stop Detail</h3>
+<ol>
+<li>Ask: Where is the FC bus stop?</li>
+<li>The app opens the Bus Stop Detail screen for N24 / Cluster Area.</li>
+<li>Point to Data status to show uncertainty is clearly described instead of overstated.</li>
+</ol>
+<figure><img src="manual_screenshots_annotated/06-bus-stop-detail.png" alt="Figure 7. Bus Stop Detail with routes, data status, facilities and walking guidance." /><figcaption>Figure 7. Bus Stop Detail with routes, data status, facilities and walking guidance.</figcaption></figure>
+<h3>4.6 Alerts and Subscription Filtering</h3>
+<ol>
+<li>In Staff Control Panel, delay a route that Ali is not subscribed to, such as BAS G.</li>
+<li>Open Alerts. The route delay is hidden because Ali is not subscribed to that route.</li>
+<li>Delay BAS A, which Ali is subscribed to. The alert becomes visible with scheduled time, ETA, service window and frequency.</li>
+</ol>
+<figure><img src="manual_screenshots_annotated/07-alerts-subscription-filter.png" alt="Figure 8. Alerts screen proving unsubscribed route delays stay hidden." /><figcaption>Figure 8. Alerts screen proving unsubscribed route delays stay hidden.</figcaption></figure>
+<figure><img src="manual_screenshots_annotated/08-alerts-after-proof.png" alt="Figure 9. Subscribed BAS A delay alert with ETA and route timing details." /><figcaption>Figure 9. Subscribed BAS A delay alert with ETA and route timing details.</figcaption></figure>
+<h3>4.7 Feedback and Staff Report Follow-Up</h3>
+<ol>
+<li>Open Feedback / Escalate.</li>
+<li>Select an issue type, enter details and submit the report.</li>
+<li>Open Staff Control Panel. The same report appears under Reported issues for staff follow-up.</li>
+</ol>
+<figure><img src="manual_screenshots_annotated/09-feedback-submission.png" alt="Figure 10. Feedback report logged by the passenger." /><figcaption>Figure 10. Feedback report logged by the passenger.</figcaption></figure>
+<figure><img src="manual_screenshots_annotated/10-staff-report-feed.png" alt="Figure 11. Staff Control Panel showing the submitted passenger report." /><figcaption>Figure 11. Staff Control Panel showing the submitted passenger report.</figcaption></figure>
+<h3>4.8 Staff Delay Proof</h3>
+<p>The Staff Control Panel is inside the prototype so the marker can trigger repeatable proof scenarios. The Word manual remains the separate admin deliverable.</p>
+<ol>
+<li>Open Staff Control Panel.</li>
+<li>Toggle BAS A1/A2 to delayed.</li>
+<li>The app runs Resolution.prove(&#x27;ali&#x27;, &#x27;route_a&#x27;).</li>
+<li>The proof panel derives the empty clause, proving NotifyUser(ali, route_a, delay).</li>
+<li>Open Alerts to verify only the subscribed route notification is visible.</li>
+</ol>
+<table><thead><tr>
+<th>Clause</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>P1 WantsRouteAlert(ali, route_a)</td>
+<td>Ali subscribes to BAS A route alerts.</td>
+</tr>
+<tr>
+<td>P2 Delayed(route_a)</td>
+<td>BAS A is currently marked delayed by staff.</td>
+</tr>
+<tr>
+<td>P3 not Delayed(r) OR NeedDelayNotification(r)</td>
+<td>A delayed route requires a delay notification.</td>
+</tr>
+<tr>
+<td>P4 not WantsRouteAlert(u,r) OR not NeedDelayNotification(r) OR NotifyUser(u,r,delay)</td>
+<td>A subscribed user is notified when a notification is needed.</td>
+</tr>
+<tr>
+<td>Negated goal: not NotifyUser(ali, route_a, delay)</td>
+<td>Resolution assumes the opposite and derives a contradiction.</td>
+</tr>
+</tbody></table>
+<figure><img src="manual_screenshots_annotated/11-resolution-proof.png" alt="Figure 12. Staff proof trace after BAS A is marked delayed." /><figcaption>Figure 12. Staff proof trace after BAS A is marked delayed.</figcaption></figure>
+<figure><img src="manual_screenshots_annotated/11b-resolution-proof-box.png" alt="Figure 13. Cropped proof trace showing the empty clause." /><figcaption>Figure 13. Cropped proof trace showing the empty clause.</figcaption></figure>
+<h2>5. Configuration Guide</h2>
+<h3>5.1 Edit Stops</h3>
+<p>Stops are configured in KB.stops inside js/kb.js. Use aliases for names students actually type, and always include a status field that states whether the mapping is public, verified, or prototype-only.</p>
+<pre>{ id: &quot;p19&quot;, name: &quot;P19 / FKE Area&quot;, aliases: [&quot;p19&quot;, &quot;fke&quot;, &quot;electrical&quot;], status: &quot;public stop/area label with faculty alias&quot;, facilities: [&quot;Faculty area&quot;, &quot;Lecture halls&quot;], walking: &quot;Alight at P19 for the FKE-area prototype. Confirm the exact shelter in production.&quot; }</pre>
+<h3>5.2 Edit Routes and Timetables</h3>
+<p>Routes are configured in KB.routes. The full-day timetable is generated from operating.start, operating.end and headway. This keeps the demo repeatable without pretending to use live GPS.</p>
+<pre>{ id: &quot;route_g&quot;, name: &quot;BAS G1/G2/G3 - KTR/KTHO/KTDI to SKT&quot;, stops: [&quot;ktr&quot;,&quot;ktho&quot;,&quot;ktdi&quot;,&quot;n24&quot;,&quot;skt&quot;,&quot;p19&quot;,&quot;cp&quot;], operating: { start: &quot;07:00&quot;, end: &quot;18:30&quot; }, headway: 20, source: &quot;Public UTM/DVC/KDOJ route listing; timetable estimate configured in app.&quot; }</pre>
+<h3>5.3 Tune Intents and Retrieval</h3>
 <ul>
-  <li>Sample data only; arrival is simulated (no live GPS feed).</li>
-  <li>Retrieval is token-overlap, not a real vector DB.</li>
-  <li>Resolution engine scoped to the delay-notification clause set.</li>
-  <li>Notifications appear in-app; no real push delivery.</li>
+<li>Edit CUES in js/intent.js when common student phrases are missing.</li>
+<li>Strong cues score 2; weak cues score 1. Avoid using overly common words as strong cues.</li>
+<li>Edit KB.faqs and route/stop aliases to improve RAG-style retrieval results.</li>
+<li>After changing intent cues, test schedule, route, arrival, bus-stop, alerts, feedback and FAQ queries.</li>
 </ul>
-
-<footer>TransitAI UTM prototype · Administrator Manual · Group 5 ·
-The production design (LLM + RAG + vector DB + Notification API) is in the report.</footer>
-</body>
-</html>
+<h3>5.4 Configure Demo Time</h3>
+<p>The default demo time is 10:00 so presentation does not depend on the real current time. Staff can switch to 08:00, 10:00, 13:00, 17:30, 20:30 or live device time from Staff Control Panel.</p>
+<h3>5.5 Configure Subscriptions and Delay Proof</h3>
+<ul>
+<li>KB.subscriptions stores WantsRouteAlert(user, route) facts. The demo user is ali.</li>
+<li>KB.delayedRoutes stores Delayed(route) facts. Staff toggles update this list.</li>
+<li>Resolution.prove(user, route) only proves NotifyUser when both subscription and delay facts exist.</li>
+<li>If a delayed route is not subscribed, Alerts correctly hides the notification for Ali.</li>
+</ul>
+<h2>6. Troubleshooting</h2>
+<table><thead><tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr></thead><tbody>
+<tr>
+<td>Blank screen</td>
+<td>Script load issue or missing file</td>
+<td>Reload and ensure kb.js, intent.js, retriever.js, resolution.js, chat.js and app.js are loaded in index.html order.</td>
+</tr>
+<tr>
+<td>Schedule says closed now</td>
+<td>Demo/live clock outside service window</td>
+<td>Staff Control Panel -&gt; Demo time -&gt; 10:00 for normal presentation.</td>
+</tr>
+<tr>
+<td>Wrong route result</td>
+<td>No directional route sequence serves origin before destination</td>
+<td>Use CP as interchange or add a verified route sequence. Do not invent official data.</td>
+</tr>
+<tr>
+<td>No delay alert appears</td>
+<td>Ali is not subscribed to the delayed route</td>
+<td>Turn on the route subscription or use BAS A, which is seeded for the proof.</td>
+</tr>
+<tr>
+<td>Proof does not run</td>
+<td>Route is not marked delayed or user lacks subscription</td>
+<td>Toggle BAS A delayed and confirm KB.subscriptions contains ali/route_a.</td>
+</tr>
+<tr>
+<td>Feedback not visible to staff</td>
+<td>Staff Control Panel has not been opened/refreshed after submission</td>
+<td>Open Staff Control Panel; renderStaffIssues() reads KB.feedbackLog.</td>
+</tr>
+<tr>
+<td>Teacher asks if times are official</td>
+<td>Prototype uses configured estimates</td>
+<td>State clearly: route names/sequences are public-list aligned; timing/ETA/delay are POC estimates.</td>
+</tr>
+</tbody></table>
+<h2>7. Demo Checklist</h2>
+<ul>
+<li>Open index.html or serve the prototype folder with python3 -m http.server 8000.</li>
+<li>Set Staff Control Panel -&gt; Demo time to 10:00 before the main demo.</li>
+<li>Show Home, Chat schedule, Timetable search, route timetable, route guidance, bus-stop detail, Alerts, Feedback and Staff Control Panel.</li>
+<li>Submit a Feedback report and verify it appears under Staff Control Panel -&gt; Reported issues.</li>
+<li>Toggle BAS A delayed, show the resolution proof, then open Alerts to show the subscribed notification.</li>
+<li>Say the data boundary clearly: public route names/sequences where available; timetable, ETA and delay values are configured POC estimates.</li>
+</ul>
+<footer><p>TransitAI UTM Prototype | Administrator Manual | Group 5</p></footer>
+</body></html>

@@ -1,3 +1,9 @@
 .DS_Store
 outputs/
+prototype/.playwright-cli/
+prototype/output/
+prototype/scripts/__pycache__/
+prototype/*.mov
+prototype/transitai-full-demo-staff-report-*.mp4
+prototype/transitai-full-demo-staff-report-*.webm
 prototype/docx_render/

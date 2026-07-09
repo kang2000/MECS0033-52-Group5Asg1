@@ -45,8 +45,9 @@ during presentation even if you present at night. Change this in
    17:30, 20:30, or live time, then repeat a schedule query.
 6. **Delay alert + logic proof** — open the **🛠️ Staff Demo** tab, toggle
    *BAS A1/A2 — KP to Lingkaran Ilmu* to **delayed**. The **resolution-refutation proof**
-   runs (matching report Figure 5.2) and the subscribed user is notified — see
-   the **🔔 Alerts** tab.
+   runs (matching report Figure 5.2), the schedule card shows the simulated
+   delayed estimate, and the subscribed user is notified — see the **🔔 Alerts**
+   tab.
 7. **Feedback** — open **📝 Feedback**, submit a report.
 
 The right-hand **“What the AI just did”** panel shows the live pipeline:
