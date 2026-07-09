@@ -11,7 +11,7 @@
   <!-- Prototype banner (visible "this is a POC" label for the grader) -->
   <div class="proto-banner">
     TransitAI UTM · Interactive Prototype (Proof of Concept) ·
-    <strong>uses prototype sample data &amp; simulated real-time</strong>
+    <strong>uses campus route data &amp; timetable estimates</strong>
   </div>
 
   <main class="stage">
@@ -38,8 +38,43 @@
 
         <!-- ============ SCREENS ============ -->
 
-        <!-- 1) HOME / CHAT QUERY / (Schedule, Route, Arrival render here) -->
-        <section id="screen-chat" class="screen is-active">
+        <!-- 1) HOME -->
+        <section id="screen-home" class="screen is-active">
+          <div class="home-title">
+            <h1>Transit<span>AI</span> UTM</h1>
+            <p>Your Campus Bus Assistant</p>
+          </div>
+
+          <div class="home-hero" aria-label="UTM shuttle bus illustration">
+            <img class="hero-image" src="assets/home-bus-hero.png" alt="UTM shuttle bus at a campus stop" />
+          </div>
+
+          <div class="home-actions">
+            <button class="home-card" data-screen="screen-chat">
+              <span class="home-icon">🧭</span>
+              <span><b>Plan Your Trip</b><small>Chat for route and arrival times.</small></span>
+              <i>›</i>
+            </button>
+            <button class="home-card" data-screen="screen-timetable">
+              <span class="home-icon">🚌</span>
+              <span><b>Bus Timetable</b><small>View all route schedules and next buses.</small></span>
+              <i>›</i>
+            </button>
+            <button class="home-card" data-screen="screen-alerts">
+              <span class="home-icon">🔔</span>
+              <span><b>Service Alerts</b><small id="homeAlertText">No subscribed route alerts.</small></span>
+              <i>›</i>
+            </button>
+            <button class="home-card" data-screen="screen-feedback">
+              <span class="home-icon">📝</span>
+              <span><b>Report an Issue</b><small>Send route or stop feedback.</small></span>
+              <i>›</i>
+            </button>
+          </div>
+        </section>
+
+        <!-- 2) CHAT QUERY / (Schedule, Route, Arrival render here) -->
+        <section id="screen-chat" class="screen">
           <div id="thread" class="thread" aria-live="polite"></div>
 
           <div class="quick-actions" id="quickActions">
@@ -57,28 +92,43 @@
           </form>
         </section>
 
-        <!-- 2) ALERTS / NOTIFICATIONS -->
+        <!-- 3) TIMETABLE -->
+        <section id="screen-timetable" class="screen">
+          <h2 class="screen-title">🚌 Bus Timetable</h2>
+          <p class="screen-help">All campus shuttle routes, next bus times, service windows and frequency.</p>
+          <label class="search-box" for="timetableSearch">
+            <span>🔎</span>
+            <input id="timetableSearch" type="search" placeholder="Search route, stop, or faculty…" />
+          </label>
+          <div id="timetableList" class="timetable-list"></div>
+        </section>
+
+        <section id="screen-route-timetable" class="screen">
+          <button class="back-btn" data-screen="screen-timetable">‹ Back to timetable</button>
+          <div id="routeTimetableDetail"></div>
+        </section>
+
+        <!-- 4) ALERTS / NOTIFICATIONS -->
         <section id="screen-alerts" class="screen">
-          <h2 class="screen-title">🔔 Alerts &amp; Notifications
-            <span class="sim-tag">simulated</span></h2>
-          <p class="screen-help">Delay notices are produced by the resolution-logic
-            engine when a route you subscribe to is delayed.</p>
+          <h2 class="screen-title">🔔 Alerts &amp; Notifications</h2>
+          <p class="screen-help">Live-style notices for the routes you follow. Delays on
+            unsubscribed routes stay hidden until you turn them on.</p>
           <div id="alertList" class="alert-list"></div>
 
           <h3 class="sub">Your route subscriptions</h3>
           <div id="subList" class="sub-list"></div>
         </section>
 
-        <!-- 3) BUS STOP DETAIL -->
+        <!-- 5) BUS STOP DETAIL -->
         <section id="screen-stop" class="screen">
-          <button class="back-btn" data-screen="screen-chat">‹ Back to chat</button>
+          <button class="back-btn" data-screen="screen-home">‹ Back to home</button>
           <h2 class="screen-title">📍 Bus Stop Detail</h2>
           <div id="stopDetail" class="stop-detail"></div>
         </section>
 
-        <!-- 4) FEEDBACK / ESCALATE -->
+        <!-- 6) FEEDBACK / ESCALATE -->
         <section id="screen-feedback" class="screen">
-          <button class="back-btn" data-screen="screen-chat">‹ Back to chat</button>
+          <button class="back-btn" data-screen="screen-home">‹ Back to home</button>
           <h2 class="screen-title">📝 Feedback / Escalate</h2>
           <p class="screen-help">Report wrong information or an unresolved issue.
             It is logged for transport staff follow-up.</p>
@@ -99,13 +149,12 @@
           <div id="fbLog" class="fb-log"></div>
         </section>
 
-        <!-- 5) STAFF DEMO PANEL (drives the resolution proof) -->
+        <!-- 7) STAFF DEMO PANEL (drives the resolution proof) -->
         <section id="screen-admin" class="screen">
-          <h2 class="screen-title">🛠️ Staff / Demo Control
-            <span class="sim-tag">demo control</span></h2>
-          <p class="screen-help">Transport staff demo controls. Mark a route delayed to trigger the
-            <strong>resolution-refutation</strong> proof that notifies subscribed users. The
-            separate Word file remains the Administrator Manual for grading.</p>
+          <h2 class="screen-title">🛠️ Staff Control Panel
+            <span class="sim-tag">Operations</span></h2>
+          <p class="screen-help">Transport staff controls for route delay updates,
+            passenger reports and the resolution-refutation proof used in the report.</p>
 
           <div class="demo-time">
             <label for="demoTimeSelect">Demo time</label>
@@ -120,20 +169,34 @@
             <small id="demoTimeNote">Schedule and ETA cards use this time.</small>
           </div>
 
+          <section class="staff-card staff-issues-card">
+            <div class="card-title">
+              <span>Reported issues</span>
+              <small id="staffIssueCount">No open reports</small>
+            </div>
+            <div id="staffIssueList" class="staff-issue-list"></div>
+          </section>
+
+          <h3 class="sub compact">Route delay controls</h3>
           <div id="routeAdmin" class="route-admin"></div>
 
-          <h3 class="sub">Resolution proof trace
-            <span class="muted">(report Figure 5.2)</span></h3>
-          <div id="proofBox" class="proof-box">
-            <em class="muted">Toggle a delay above to run the proof…</em>
-          </div>
+          <section class="staff-card proof-card">
+            <div class="card-title">
+              <span>Resolution proof trace</span>
+              <small>Report Figure 5.2</small>
+            </div>
+            <div id="proofBox" class="proof-box">
+              <em class="muted">Toggle a delay above to run the proof…</em>
+            </div>
+          </section>
         </section>
 
         <!-- ============ Bottom navigation ============ -->
         <nav class="tabbar">
-          <button class="tab is-active" data-screen="screen-chat">💬<span>Chat</span></button>
+          <button class="tab is-active" data-screen="screen-home">🏠<span>Home</span></button>
+          <button class="tab" data-screen="screen-chat">💬<span>Chat</span></button>
+          <button class="tab" data-screen="screen-timetable">🚌<span>Timetable</span></button>
           <button class="tab" data-screen="screen-alerts">🔔<span>Alerts</span></button>
-          <button class="tab" data-screen="screen-feedback">📝<span>Feedback</span></button>
           <button class="tab" data-screen="screen-admin">🛠️<span>Staff Demo</span></button>
         </nav>
 

@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,228 +8,281 @@ import {
   ensureArtifactToolWorkspace,
   importArtifactTool,
   saveBlobToFile,
-} from "/Users/kang/.codex/plugins/cache/openai-primary-runtime/presentations/26.521.10419/skills/presentations/scripts/artifact_tool_utils.mjs";
+} from "/Users/kang/.codex/plugins/cache/openai-primary-runtime/presentations/26.630.12135/skills/presentations/container_tools/artifact_tool_utils.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const prototypeDir = path.resolve(here, "..");
-const repoDir = path.resolve(prototypeDir, "..");
-const workspace = path.join(repoDir, "outputs", "manual-presentation", "presentations", "transitai-demo");
+const workspace = path.join(os.tmpdir(), "codex-presentations", "transitai-utm-demo-deck");
 const previewDir = path.join(workspace, "preview");
+const layoutDir = path.join(workspace, "layout");
 const output = path.join(prototypeDir, "TransitAI_UTM_Prototype_Demo.pptx");
 const screenshots = path.join(prototypeDir, "manual_screenshots");
 
 const W = 1280;
 const H = 720;
 const MAROON = "#7A0C2E";
+const MAROON_D = "#54071F";
 const GOLD = "#F2A900";
 const INK = "#1E2330";
 const MUTED = "#5B6270";
-const BG = "#F5F7FB";
-const LINE = "#D9DEE8";
+const BG = "#F6F7FA";
+const LINE = "#D5DAE3";
 const OK = "#138A52";
+const BLACK = "#111111";
+const WHITE = "#FFFFFF";
 
 await fs.mkdir(previewDir, { recursive: true });
+await fs.mkdir(layoutDir, { recursive: true });
 await ensureArtifactToolWorkspace(workspace);
 const artifact = await importArtifactTool(workspace);
 const { Presentation, PresentationFile } = artifact;
 const presentation = Presentation.create({ slideSize: { width: W, height: H } });
-const ctx = createSlideContext(artifact, { slideSize: { width: W, height: H }, workspaceDir: workspace, assetDir: path.join(workspace, "assets") });
+const ctx = createSlideContext(artifact, {
+  slideSize: { width: W, height: H },
+  workspaceDir: workspace,
+  assetDir: path.join(workspace, "assets"),
+  titleFont: "Arial",
+  bodyFont: "Arial",
+});
 
-function slideBase(title, kicker = "TransitAI UTM Prototype") {
+function addText(slide, opts) {
+  return ctx.addText(slide, {
+    typeface: "Arial",
+    line: ctx.line("#00000000", 0),
+    ...opts,
+  });
+}
+
+function baseSlide(title, kicker = "TransitAI UTM Prototype") {
   const slide = presentation.slides.add();
   slide.background.fill = BG;
-  ctx.addShape(slide, { left: 0, top: 0, width: W, height: 78, fill: MAROON });
-  ctx.addShape(slide, { left: 0, top: 78, width: W, height: 5, fill: GOLD });
-  ctx.addText(slide, { left: 52, top: 18, width: 780, height: 40, text: title, fontSize: 28, bold: true, color: "#FFFFFF" });
-  ctx.addText(slide, { left: 990, top: 27, width: 230, height: 24, text: kicker, fontSize: 12, bold: true, color: "#FFE9B0", align: "right" });
+  ctx.addShape(slide, { left: 0, top: 0, width: W, height: 82, fill: MAROON });
+  ctx.addShape(slide, { left: 0, top: 82, width: W, height: 6, fill: GOLD });
+  addText(slide, { left: 54, top: 19, width: 830, height: 48, text: title, fontSize: 36, bold: true, color: WHITE });
+  addText(slide, { left: 940, top: 30, width: 280, height: 28, text: kicker, fontSize: 16, bold: true, color: "#FFE9B0", align: "right" });
   return slide;
+}
+
+function addCard(slide, x, y, w, h, title, body, accent = MAROON) {
+  ctx.addShape(slide, { geometry: "roundRect", left: x, top: y, width: w, height: h, fill: WHITE, line: ctx.line(LINE, 1) });
+  ctx.addShape(slide, { left: x, top: y, width: 8, height: h, fill: accent });
+  addText(slide, { left: x + 24, top: y + 18, width: w - 48, height: 32, text: title, fontSize: 24, bold: true, color: accent });
+  addText(slide, { left: x + 24, top: y + 58, width: w - 48, height: h - 72, text: body, fontSize: 18, color: INK, lineSpacing: 1.16 });
+}
+
+function bullets(items) {
+  return items.map((item) => `• ${item}`).join("\n");
+}
+
+async function addScreenshot(slide, file, x, y, w, h, caption = "") {
+  await ctx.addImage(slide, {
+    path: path.join(screenshots, file),
+    left: x,
+    top: y,
+    width: w,
+    height: h,
+    fit: "contain",
+    alt: caption || file,
+  });
+  if (caption) {
+    addText(slide, { left: x, top: y + h + 6, width: w, height: 24, text: caption, fontSize: 16, color: MUTED, align: "center" });
+  }
+}
+
+function addCallout(slide, text, box, target, options = {}) {
+  const { accent = BLACK, fromSide = "bottom", toSide = "top" } = options;
+  const label = addText(slide, {
+    left: box.x,
+    top: box.y,
+    width: box.w,
+    height: box.h,
+    text,
+    fontSize: options.fontSize || 20,
+    bold: true,
+    color: BLACK,
+    fill: WHITE,
+    line: ctx.line(accent, 2),
+    insets: { left: 12, right: 12, top: 8, bottom: 8 },
+  });
+  const targetDot = ctx.addShape(slide, {
+    geometry: "ellipse",
+    left: target.x - 5,
+    top: target.y - 5,
+    width: 10,
+    height: 10,
+    fill: accent,
+    line: ctx.line(accent, 1),
+  });
+  const connector = slide.shapes.connect(label, targetDot, {
+    kind: "straight",
+    fromSide,
+    toSide,
+    line: { style: "solid", fill: accent, width: 3 },
+    head: { type: "arrow", width: "med", length: "med" },
+  });
+  connector.bringToFront?.();
+  label.bringToFront?.();
+  targetDot.bringToFront?.();
 }
 
 function titleSlide() {
   const slide = presentation.slides.add();
-  slide.background.fill = BG;
-  ctx.addShape(slide, { left: 0, top: 0, width: W, height: H, fill: "#FFFFFF" });
-  ctx.addShape(slide, { left: 0, top: 0, width: 420, height: H, fill: MAROON });
-  ctx.addShape(slide, { left: 420, top: 0, width: 18, height: H, fill: GOLD });
-  ctx.addText(slide, { left: 70, top: 72, width: 300, height: 60, text: "TransitAI UTM", fontSize: 34, bold: true, color: "#FFFFFF" });
-  ctx.addText(slide, { left: 70, top: 148, width: 290, height: 160, text: "Campus transport chatbot prototype", fontSize: 24, color: "#FFE9B0", lineSpacing: 1.14 });
-  ctx.addText(slide, { left: 70, top: 560, width: 285, height: 72, text: "MECS0033-52 Artificial Intelligence\nGroup 5", fontSize: 16, color: "#FFFFFF", lineSpacing: 1.25 });
-  ctx.addText(slide, { left: 505, top: 88, width: 650, height: 72, text: "Teacher-facing demo deck", fontSize: 42, bold: true, color: INK });
-  ctx.addText(slide, { left: 505, top: 178, width: 640, height: 150, text: "Shows exactly how the prototype meets the rubric: interactive screen, problem solving, and administrator manual support.", fontSize: 25, color: MUTED, lineSpacing: 1.22 });
-  const rows = [
-    ["Interactive", "Free text, quick actions, phone UI"],
-    ["AI evidence", "Intent confidence, RAG-style retrieval, proof trace"],
-    ["Truthful data", "Public route labels + simulated timing boundary"],
-  ];
-  rows.forEach((row, i) => {
-    const y = 380 + i * 72;
-    ctx.addShape(slide, { left: 505, top: y, width: 610, height: 54, fill: "#F7F2E8", line: ctx.line(GOLD, 1), borderRadius: "rounded-md" });
-    ctx.addText(slide, { left: 525, top: y + 12, width: 150, height: 26, text: row[0], fontSize: 17, bold: true, color: MAROON });
-    ctx.addText(slide, { left: 695, top: y + 12, width: 395, height: 28, text: row[1], fontSize: 17, color: INK });
-  });
-}
-
-function addCard(slide, x, y, w, h, title, body, accent = MAROON) {
-  ctx.addShape(slide, { left: x, top: y, width: w, height: h, fill: "#FFFFFF", line: ctx.line(LINE, 1), borderRadius: "rounded-md" });
-  ctx.addShape(slide, { left: x, top: y, width: 7, height: h, fill: accent });
-  ctx.addText(slide, { left: x + 22, top: y + 16, width: w - 44, height: 28, text: title, fontSize: 19, bold: true, color: accent });
-  ctx.addText(slide, { left: x + 22, top: y + 52, width: w - 44, height: h - 62, text: body, fontSize: 15, color: INK, lineSpacing: 1.18 });
-}
-
-async function addScreenshot(slide, file, x, y, w, h, caption) {
-  await ctx.addImage(slide, { path: path.join(screenshots, file), left: x, top: y, width: w, height: h, fit: "contain", alt: caption });
-  if (caption) ctx.addText(slide, { left: x, top: y + h + 6, width: w, height: 22, text: caption, fontSize: 11, color: MUTED, align: "center" });
-}
-
-function bullets(items) {
-  return items.map(item => `• ${item}`).join("\n");
+  slide.background.fill = "#F3E0B7";
+  ctx.addShape(slide, { left: 0, top: 0, width: W, height: 118, fill: "#F7D9A8" });
+  ctx.addShape(slide, { left: 0, top: 118, width: 330, height: 40, fill: "#FF9A00" });
+  addText(slide, { left: 380, top: 26, width: 770, height: 72, text: "TransitAI UTM Prototype", fontSize: 56, bold: true, color: "#C00000", align: "center" });
+  addText(slide, { left: 74, top: 128, width: 220, height: 28, text: "www.utm.my", fontSize: 24, bold: true, color: WHITE, align: "center" });
+  addText(slide, { left: 80, top: 205, width: 520, height: 110, text: "Interactive campus transport chatbot", fontSize: 42, bold: true, color: MAROON, lineSpacing: 1.06 });
+  addText(slide, { left: 80, top: 338, width: 510, height: 112, text: "Demonstrates natural-language queries, route retrieval, demo-time control, and a resolution-refutation alert proof.", fontSize: 24, color: INK, lineSpacing: 1.18 });
+  addCard(slide, 78, 500, 350, 110, "Prepared for", "MECS0033 Artificial Intelligence\nSection 52, Group 5", MAROON);
+  addCard(slide, 462, 500, 350, 110, "Scoring focus", "Originality / Interactive Screen\nProblem Solving\nAdmin Manual", OK);
+  ctx.addShape(slide, { geometry: "roundRect", left: 855, top: 190, width: 290, height: 452, fill: WHITE, line: ctx.line(MAROON, 3) });
+  addText(slide, { left: 888, top: 238, width: 225, height: 100, text: "Chat\nSchedule\nRoute\nAlerts\nProof", fontSize: 32, bold: true, color: MAROON, align: "center", lineSpacing: 1.22 });
+  addText(slide, { left: 895, top: 492, width: 210, height: 48, text: "No install\nNo Firebase\nNo API key", fontSize: 22, color: INK, align: "center", lineSpacing: 1.16 });
 }
 
 function rubricSlide() {
-  const slide = slideBase("Rubric fit: high-score evidence");
-  addCard(slide, 70, 125, 350, 205, "Originality / Interactive Screen", bullets([
-    "Phone-frame app with real inputs and outputs",
-    "Intent confidence visible to marker",
-    "RAG-style source panel",
-    "Resolution proof is tied to the report logic",
+  const slide = baseSlide("How the prototype targets full marks");
+  addCard(slide, 62, 128, 356, 248, "Originality / Interactive Screen", bullets([
+    "Phone-style app with real input/output",
+    "Intent confidence shown live",
+    "RAG-style retrieval panel",
+    "Resolution proof drives alerts",
+    "Demo-time scenarios are controllable",
   ]), MAROON);
-  addCard(slide, 465, 125, 350, 205, "Problem Solving", bullets([
+  addCard(slide, 462, 128, 356, 248, "Problem Solving", bullets([
     "Schedule uncertainty",
-    "Route confusion",
+    "Route and destination confusion",
     "Arrival uncertainty",
     "Delay notification gap",
-    "Feedback / escalation",
+    "Feedback escalation",
   ]), OK);
-  addCard(slide, 860, 125, 350, 205, "Admin Manual", bullets([
+  addCard(slide, 862, 128, 356, 248, "Admin Manual", bullets([
+    "Separate Word deliverable",
     "Component/function map",
-    "Data-source truth policy",
-    "Configuration guide",
-    "Screenshots and troubleshooting",
+    "Source truth policy",
+    "Step-by-step screenshots",
+    "Troubleshooting and config guide",
   ]), GOLD);
-  ctx.addText(slide, { left: 90, top: 410, width: 1100, height: 100, text: "Main scoring risk reduced: the prototype now clearly labels what is public route data and what is simulated POC behavior. The demo-time control prevents night presentation from making every route look closed.", fontSize: 28, bold: true, color: INK, lineSpacing: 1.14, align: "center" });
+  addText(slide, { left: 105, top: 455, width: 1070, height: 98, text: "The strongest demo line: this is not just a mockup. The app exposes intent recognition, retrieval, source grounding, memory, and a real resolution-refutation proof.", fontSize: 32, bold: true, color: INK, align: "center", lineSpacing: 1.1 });
 }
 
-function truthSlide() {
-  const slide = slideBase("Data truth policy");
-  const rows = [
-    ["Public route listing aligned", "BAS A/B/C/D/E/F/G/H labels and public stop sequences"],
-    ["Public stop labels", "CP, KTDI, KTHO, KTR, KDOJ, N24, P19, T02, T08, V01, etc."],
-    ["Prototype mappings", "FC → N24 / Cluster Area; FKE → P19 / FKE Area"],
-    ["Simulated POC data", "Next departure, operating hours, headway, live arrival ETA, delay status"],
-  ];
-  rows.forEach((row, i) => {
-    const y = 135 + i * 95;
-    ctx.addShape(slide, { left: 80, top: y, width: 1120, height: 72, fill: "#FFFFFF", line: ctx.line(LINE, 1), borderRadius: "rounded-md" });
-    ctx.addText(slide, { left: 105, top: y + 14, width: 280, height: 26, text: row[0], fontSize: 18, bold: true, color: i < 2 ? OK : GOLD });
-    ctx.addText(slide, { left: 410, top: y + 14, width: 750, height: 44, text: row[1], fontSize: 18, color: INK });
-  });
-  ctx.addText(slide, { left: 85, top: 555, width: 1090, height: 70, text: "Presentation wording: “Route names and stop sequences follow public UTM/KDOJ listings where available. Timetable/ETA values are simulated because no live verified feed is connected to this 10% POC.”", fontSize: 20, bold: true, color: MAROON, lineSpacing: 1.18 });
+async function firstScreenSlide() {
+  const slide = baseSlide("First screen is the usable prototype");
+  await addScreenshot(slide, "01-home-chat.png", 64, 116, 790, 520, "Home/chat with phone frame and AI pipeline panel.");
+  addCallout(slide, "Phone time is visible", { x: 880, y: 130, w: 290, h: 58 }, { x: 433, y: 153 }, { accent: MAROON, toSide: "right" });
+  addCallout(slide, "Tap quick actions", { x: 880, y: 236, w: 290, h: 58 }, { x: 286, y: 520 }, { accent: GOLD, toSide: "right" });
+  addCallout(slide, "Type a free-text query", { x: 880, y: 342, w: 290, h: 62 }, { x: 385, y: 555 }, { accent: OK, toSide: "right" });
+  addCallout(slide, "AI pipeline evidence", { x: 880, y: 452, w: 290, h: 62 }, { x: 622, y: 148 }, { accent: BLACK, toSide: "right" });
 }
 
-async function overviewSlide() {
-  const slide = slideBase("Prototype first screen");
-  await addScreenshot(slide, "01-home-chat.png", 72, 120, 760, 540, "Home/chat, quick actions and AI pipeline panel.");
-  addCard(slide, 875, 145, 315, 160, "What to point out", bullets([
-    "Phone status time now visible",
-    "No install, no backend",
-    "Input and output shown immediately",
-  ]), MAROON);
-  addCard(slide, 875, 335, 315, 180, "AI visibility", bullets([
-    "Intent recognition",
-    "Knowledge retrieval",
-    "Grounded response",
-    "Source note",
-  ]), GOLD);
+async function scheduleSlide() {
+  const slide = baseSlide("Schedule demo works at any presentation time");
+  await addScreenshot(slide, "02-schedule-demo-time.png", 62, 116, 790, 520, "Schedule card after tapping Next bus.");
+  addCallout(slide, "Intent + confidence", { x: 880, y: 126, w: 292, h: 60 }, { x: 445, y: 180 }, { accent: MAROON, toSide: "right" });
+  addCallout(slide, "Time basis shows demo clock", { x: 880, y: 236, w: 292, h: 72 }, { x: 420, y: 430 }, { accent: GOLD, toSide: "right" });
+  addCallout(slide, "Source note protects data truth", { x: 880, y: 370, w: 292, h: 78 }, { x: 370, y: 575 }, { accent: OK, toSide: "right" });
+  addText(slide, { left: 878, top: 548, width: 320, height: 70, text: "Demo line: route/sequence is public-list aligned; timing and ETA are simulated POC data.", fontSize: 20, bold: true, color: INK, lineSpacing: 1.12 });
 }
 
-async function studentFlowsSlide() {
-  const slide = slideBase("Student flows: schedule, route, arrival");
-  await addScreenshot(slide, "02-schedule-demo-time.png", 55, 118, 360, 255, "Schedule: demo time + source note");
-  await addScreenshot(slide, "03-route-guidance.png", 460, 118, 360, 255, "Route: BAS G stop sequence");
-  await addScreenshot(slide, "04-arrival-simulated.png", 865, 118, 360, 255, "Arrival: simulated ETA");
-  ctx.addText(slide, { left: 95, top: 445, width: 1090, height: 86, text: "The marker sees the real problem being solved: students can ask natural questions instead of searching static notices. Each answer states the data source and simulation boundary.", fontSize: 27, bold: true, color: INK, align: "center", lineSpacing: 1.15 });
+async function routeSlide() {
+  const slide = baseSlide("Route guidance uses ordered stop sequences");
+  await addScreenshot(slide, "03-route-guidance.png", 62, 116, 790, 520, "Route query from KTDI to P19/FKE.");
+  addCallout(slide, "Free-text route request", { x: 876, y: 130, w: 300, h: 62 }, { x: 420, y: 202 }, { accent: MAROON, toSide: "right" });
+  addCallout(slide, "BAS G recommendation", { x: 876, y: 248, w: 300, h: 62 }, { x: 318, y: 390 }, { accent: OK, toSide: "right" });
+  addCallout(slide, "Stop sequence is shown", { x: 876, y: 366, w: 300, h: 62 }, { x: 365, y: 468 }, { accent: GOLD, toSide: "right" });
+  addText(slide, { left: 870, top: 538, width: 330, height: 82, text: "Directional check: the route is valid only when origin appears before destination in the sequence.", fontSize: 20, bold: true, color: INK, lineSpacing: 1.12 });
 }
 
-async function adminTimeSlide() {
-  const slide = slideBase("Staff Demo time control");
-  await addScreenshot(slide, "06-admin-demo-time-control.png", 78, 120, 650, 505, "Staff Demo controls with fixed demo time.");
-  addCard(slide, 780, 140, 350, 145, "Why it was added", "At night, live device time makes route cards show “closed now.” Demo time gives repeatable morning/lunch/evening/night scenarios.", MAROON);
-  addCard(slide, 780, 318, 350, 145, "How to demo", "Use 10:00 for normal service. Use 20:30 only when intentionally showing closed-service behavior.", GOLD);
+async function arrivalStopSlide() {
+  const slide = baseSlide("Arrival and bus-stop screens answer different user needs");
+  await addScreenshot(slide, "04-arrival-simulated.png", 58, 122, 548, 366, "Arrival query.");
+  await addScreenshot(slide, "05-bus-stop-detail.png", 678, 122, 548, 366, "Bus-stop detail query.");
+  addCallout(slide, "ETA is labelled simulated", { x: 86, y: 528, w: 290, h: 64 }, { x: 238, y: 313 }, { accent: MAROON, fromSide: "top", toSide: "bottom" });
+  addCallout(slide, "Data status prevents overclaiming", { x: 708, y: 528, w: 360, h: 64 }, { x: 850, y: 287 }, { accent: OK, fromSide: "top", toSide: "bottom" });
+}
+
+async function staffTimeSlide() {
+  const slide = baseSlide("Staff Demo makes the presentation repeatable");
+  await addScreenshot(slide, "06-admin-demo-time-control.png", 62, 112, 790, 526, "Staff Demo time and delay controls.");
+  addCallout(slide, "Choose 10:00 for normal service", { x: 880, y: 126, w: 310, h: 72 }, { x: 365, y: 265 }, { accent: GOLD, toSide: "right" });
+  addCallout(slide, "Toggle BAS A delayed", { x: 880, y: 256, w: 310, h: 64 }, { x: 470, y: 345 }, { accent: MAROON, toSide: "right" });
+  addCallout(slide, "Proof trace appears below", { x: 880, y: 378, w: 310, h: 64 }, { x: 370, y: 585 }, { accent: BLACK, toSide: "right" });
+  addText(slide, { left: 882, top: 530, width: 315, height: 58, text: "This solves the night-demo problem: current time no longer controls what the marker sees.", fontSize: 20, bold: true, color: INK, lineSpacing: 1.1 });
 }
 
 async function proofSlide() {
-  const slide = slideBase("Originality highlight: resolution proof");
-  await addScreenshot(slide, "07b-resolution-proof-box.png", 90, 115, 350, 560, "Proof trace crop");
-  addCard(slide, 500, 140, 620, 150, "What it proves", "From P1 WantsRouteAlert(ali, route_a), P2 Delayed(route_a), and rules P3/P4, the engine derives NotifyUser(ali, route_a, delay).", OK);
-  addCard(slide, 500, 325, 620, 150, "Why it is not just UI", "Unification and resolution are computed by resolution.js. The proof only runs when the user is subscribed and the route is actually marked delayed in app state.", MAROON);
-  addCard(slide, 500, 510, 620, 110, "Demo line", "“This proof matches Figure 5.2 in our report and drives the Alerts screen.”", GOLD);
+  const slide = baseSlide("Resolution proof is the originality highlight");
+  await addScreenshot(slide, "07b-resolution-proof-box.png", 82, 122, 360, 520, "Proof trace crop.");
+  addCard(slide, 500, 130, 620, 124, "What is being proven", "NotifyUser(ali, route_a, delay) follows from Ali's subscription, the delayed route fact, and the report's notification rules.", OK);
+  addCard(slide, 500, 292, 620, 140, "Why it is logically tied to app state", "The derivation only runs when route_a is marked delayed and Ali is subscribed. It does not fire from a decorative button alone.", MAROON);
+  addCard(slide, 500, 470, 620, 116, "Presenter line", "This matches the report's Figure 5.2 resolution-refutation example and drives the Alerts screen.", GOLD);
+  addCallout(slide, "P1-P4 + negated goal", { x: 120, y: 126, w: 260, h: 58 }, { x: 190, y: 276 }, { accent: BLACK });
+  addCallout(slide, "Empty clause", { x: 120, y: 574, w: 240, h: 56 }, { x: 205, y: 516 }, { accent: OK, fromSide: "top", toSide: "bottom" });
 }
 
 async function alertsFeedbackSlide() {
-  const slide = slideBase("Staff Demo outcome: alerts and feedback");
-  await addScreenshot(slide, "08-alerts-after-proof.png", 78, 122, 500, 360, "Alerts after proof-triggered delay");
-  await addScreenshot(slide, "09-feedback-log.png", 700, 122, 500, 360, "Feedback escalation log");
-  ctx.addText(slide, { left: 115, top: 560, width: 1050, height: 55, text: "These two screens close the loop for both user pain points: proactive delay notification and staff follow-up when information is wrong or incomplete.", fontSize: 24, bold: true, color: INK, align: "center" });
+  const slide = baseSlide("Alerts and feedback close the service loop");
+  await addScreenshot(slide, "08-alerts-after-proof.png", 60, 122, 545, 374, "Alerts after proof-triggered delay.");
+  await addScreenshot(slide, "09-feedback-log.png", 680, 122, 545, 374, "Feedback report log.");
+  addCallout(slide, "Proof creates alert", { x: 92, y: 536, w: 270, h: 58 }, { x: 236, y: 262 }, { accent: MAROON, fromSide: "top", toSide: "bottom" });
+  addCallout(slide, "User can report wrong data", { x: 724, y: 536, w: 340, h: 58 }, { x: 872, y: 324 }, { accent: OK, fromSide: "top", toSide: "bottom" });
+  addText(slide, { left: 145, top: 630, width: 990, height: 46, text: "Problem solving is not only answering questions; the prototype also handles disruption and escalation.", fontSize: 25, bold: true, color: INK, align: "center" });
 }
 
-function architectureSlide() {
-  const slide = slideBase("Architecture shown in the POC");
-  const labels = [
-    ["User input", "Typed query or quick action"],
-    ["Intent", "classify() + confidence"],
-    ["Retriever", "Top KB chunks + source note"],
-    ["Response", "Grounded answer card"],
-    ["Staff proof", "Resolution derives NotifyUser"],
-  ];
-  labels.forEach((l, i) => {
-    const x = 70 + i * 235;
-    ctx.addShape(slide, { left: x, top: 185, width: 190, height: 145, fill: "#FFFFFF", line: ctx.line(LINE, 1), borderRadius: "rounded-md" });
-    ctx.addText(slide, { left: x + 16, top: 210, width: 158, height: 30, text: l[0], fontSize: 20, bold: true, color: MAROON, align: "center" });
-    ctx.addText(slide, { left: x + 18, top: 255, width: 154, height: 55, text: l[1], fontSize: 15, color: INK, align: "center", lineSpacing: 1.14 });
-    if (i < labels.length - 1) {
-      ctx.addText(slide, { left: x + 197, top: 232, width: 45, height: 45, text: "→", fontSize: 34, bold: true, color: GOLD, align: "center" });
-    }
-  });
-  ctx.addText(slide, { left: 105, top: 440, width: 1065, height: 90, text: "The side panel exposes the same pipeline live during the demo, so the grader can see the AI concept rather than only a static app screen.", fontSize: 28, bold: true, color: INK, align: "center", lineSpacing: 1.15 });
+function dataTruthSlide() {
+  const slide = baseSlide("Data truth statement for Q&A");
+  addCard(slide, 76, 132, 520, 140, "Safe claim", "Route labels and many stop sequences are aligned to public UTM/DVC/KDOJ listings where available.", OK);
+  addCard(slide, 684, 132, 520, 140, "Do not overclaim", "Current operation, timetable, ETA, headway, delay state, and walking notes are simulated because no live verified feed is connected.", MAROON);
+  addCard(slide, 76, 326, 520, 150, "Sources checked", "UTM DVC Development shuttle page\nKDOJ UTM Bus Schedule route list\nUTM JB 2025 shuttle timetable PDF", GOLD);
+  addCard(slide, 684, 326, 520, 150, "Known caveat", "Some public effective-date fields are historical. The prototype therefore uses them only as public route/sequence references, not proof of current live operation.", BLACK);
+  addText(slide, { left: 120, top: 560, width: 1040, height: 58, text: "This wording is what keeps the prototype truthful while still demonstrating the AI solution clearly.", fontSize: 28, bold: true, color: INK, align: "center" });
 }
 
-function closingSlide() {
-  const slide = slideBase("Demo checklist");
-  addCard(slide, 95, 130, 495, 390, "Before presenting", bullets([
-    "Open prototype/index.html or serve prototype folder at localhost:8000",
+function closeSlide() {
+  const slide = baseSlide("Presentation checklist");
+  addCard(slide, 94, 130, 500, 390, "Before presenting", bullets([
+    "Open prototype/index.html or localhost:8000",
     "Staff Demo -> Demo time -> 10:00",
-    "Keep the AI pipeline panel visible",
-    "Say timing/ETA are simulated POC data",
-    "Use BAS G example for KTDI to P19/FKE",
+    "Use quick actions for repeatable flows",
+    "Keep AI pipeline panel visible",
+    "Say timing and ETA are simulated",
   ]), MAROON);
-  addCard(slide, 690, 130, 495, 390, "Scoring moments", bullets([
-    "Schedule card: source + time basis",
-    "Route card: stop sequence",
+  addCard(slide, 690, 130, 500, 390, "Show these scoring moments", bullets([
+    "Schedule card: intent + time basis",
+    "Route card: BAS G sequence",
     "Staff Demo: toggle BAS A delayed",
     "Proof trace: empty clause",
     "Alerts: notification appears",
-    "Manual: Word file has full process",
+    "Word manual: separate deliverable",
   ]), OK);
-  ctx.addText(slide, { left: 120, top: 585, width: 1040, height: 46, text: "Final message: a reliable local POC with transparent data boundaries is stronger than a fragile live API demo.", fontSize: 24, bold: true, color: MAROON, align: "center" });
+  addText(slide, { left: 118, top: 596, width: 1045, height: 48, text: "Submit this PPT, ADMIN_MANUAL.docx, and the prototype folder together.", fontSize: 28, bold: true, color: MAROON, align: "center" });
 }
 
 titleSlide();
 rubricSlide();
-truthSlide();
-await overviewSlide();
-await studentFlowsSlide();
-await adminTimeSlide();
+await firstScreenSlide();
+await scheduleSlide();
+await routeSlide();
+await arrivalStopSlide();
+await staffTimeSlide();
 await proofSlide();
 await alertsFeedbackSlide();
-architectureSlide();
-closingSlide();
+dataTruthSlide();
+closeSlide();
 
 for (let i = 0; i < presentation.slides.count; i += 1) {
   const slide = presentation.slides.getItem(i);
+  const stem = `slide-${String(i + 1).padStart(2, "0")}`;
   const preview = await presentation.export({ slide, format: "png", scale: 1 });
-  await saveBlobToFile(preview, path.join(previewDir, `slide-${String(i + 1).padStart(2, "0")}.png`));
+  await saveBlobToFile(preview, path.join(previewDir, `${stem}.png`));
+  const layout = await slide.export({ format: "layout" });
+  await fs.writeFile(path.join(layoutDir, `${stem}.layout.json`), await layout.text());
 }
+
+const montage = await presentation.export({ format: "webp", montage: true, scale: 1 });
+await saveBlobToFile(montage, path.join(previewDir, "deck-montage.webp"));
 
 const pptx = await PresentationFile.exportPptx(presentation);
 await pptx.save(output);
-console.log(JSON.stringify({ output, slideCount: presentation.slides.count, previewDir }, null, 2));
+console.log(JSON.stringify({ output, slideCount: presentation.slides.count, previewDir, layoutDir }, null, 2));
