@@ -55,6 +55,14 @@ walkthrough and rubric mapping, and
 [`prototype/ADMIN_MANUAL.md`](prototype/ADMIN_MANUAL.md) for the administrator
 manual and component map.
 
+For a clearer app-style manual, see the project wiki pages in
+[`docs/wiki/Home.md`](docs/wiki/Home.md):
+[`User Manual`](docs/wiki/User-Manual.md),
+[`Staff Demo and Administrator Manual`](docs/wiki/Staff-Demo-and-Administrator-Manual.md),
+[`Data Accuracy and Scope`](docs/wiki/Data-Accuracy-and-Scope.md),
+[`Demo and Presentation Guide`](docs/wiki/Demo-and-Presentation-Guide.md), and
+[`Troubleshooting`](docs/wiki/Troubleshooting.md).
+
 ---
 
 ## How the prototype works

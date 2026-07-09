@@ -74,3 +74,11 @@ intent → retrieval → response → data source.
 | `manual_screenshots/*.png` | Rendered app screenshots used in the manual/deck |
 
 See **ADMIN_MANUAL.md** for the component map and how to edit the data.
+
+The clearer app wiki is available in `../docs/wiki/`, especially:
+
+- `../docs/wiki/User-Manual.md`
+- `../docs/wiki/Staff-Demo-and-Administrator-Manual.md`
+- `../docs/wiki/Data-Accuracy-and-Scope.md`
+- `../docs/wiki/Demo-and-Presentation-Guide.md`
+- `../docs/wiki/Troubleshooting.md`
