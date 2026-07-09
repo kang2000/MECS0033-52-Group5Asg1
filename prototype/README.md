@@ -10,7 +10,7 @@ a working **resolution-refutation inference engine** that fires delay alerts.
 > ⚠️ This is a prototype. Public route names/sequences were aligned to UTM/KDOJ
 > route listings where available. Timetable times, arrival ETA, walking notes,
 > and missing faculty/landmark mappings are clearly labelled **prototype
-> simulations** rather than official live shuttle data.
+> estimates** rather than official live shuttle data.
 
 ---
 
@@ -39,13 +39,13 @@ during presentation even if you present at night. Change this in
 
 1. **Schedule** — tap “🕑 Next bus” or type *“When is the next bus to FKE?”*
 2. **Route guidance** — *“How do I get from KTDI to P19 FKE?”*
-3. **Arrival (simulated)** — *“When will the next bus arrive at CP?”*
+3. **Arrival estimate** — *“When will the next bus arrive at CP?”*
 4. **Bus stop** — *“Where is the FC bus stop?”* (opens Bus Stop Detail)
 5. **Demo time** — open **🛠️ Staff Demo**, switch between 08:00, 10:00, 13:00,
    17:30, 20:30, or live time, then repeat a schedule query.
 6. **Delay alert + logic proof** — open the **🛠️ Staff Demo** tab, toggle
    *BAS A1/A2 — KP to Lingkaran Ilmu* to **delayed**. The **resolution-refutation proof**
-   runs (matching report Figure 5.2), the schedule card shows the simulated
+   runs (matching report Figure 5.2), the schedule card shows the delay-adjusted
    delayed estimate, and the subscribed user is notified — see the **🔔 Alerts**
    tab.
 7. **Feedback** — open **📝 Feedback**, submit a report.

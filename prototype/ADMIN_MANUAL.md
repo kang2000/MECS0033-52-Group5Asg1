@@ -50,7 +50,7 @@ Use this explanation during presentation: route names and stop sequences are ali
 | FC mapping | Prototype alias | Mapped to N24 / Cluster Area for the report demo. Exact current FC shuttle-stop mapping was not found. |
 | PSZ Library | Landmark only | The app can identify PSZ as a campus landmark, but it does not invent a direct shuttle route to PSZ. |
 | Next bus, full-day timetable, service window, ETA and delay duration | Prototype estimate | Calculated from configured operating windows/headways and demo time. Not an official live timetable. |
-| Delay alert | Prototype simulation | Staff toggle simulates transport staff publishing a disruption so the logic proof and alert workflow can be shown. |
+| Delay alert | Prototype estimate | Staff toggle represents transport staff publishing a disruption so the logic proof and alert workflow can be shown. |
 
 Sources checked on 2 July 2026: UTM DVC Development shuttle bus schedule page, KDOJ UTM Bus Schedule route list, and the UTM JB 2025 shuttle timetable PDF.
 

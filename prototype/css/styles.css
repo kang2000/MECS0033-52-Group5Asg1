@@ -58,7 +58,7 @@ body{margin:0;background:linear-gradient(160deg,#dfe4ee,#eef1f6);color:var(--ink
   padding:2px 7px;border-radius:6px;border:1px solid #ecd98a}
 .source-tag{display:inline-block;background:#eef8f4;color:#126b46;border:1px solid #bce7d2;
   border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;margin-left:4px}
-.source-tag.mock{background:#fff3cd;color:#8a6d00;border-color:#ecd98a}
+.source-tag.estimate{background:#fff3cd;color:#8a6d00;border-color:#ecd98a}
 
 /* ---------------- home ---------------- */
 .home-title{padding:4px 2px 8px}

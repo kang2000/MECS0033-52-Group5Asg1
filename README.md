@@ -89,7 +89,7 @@ a conversation: *intent → retrieval → response → data source*.
 This is an academic **proof-of-concept**. Public route names and sequences were
 aligned to UTM/KDOJ route listings where available; timetable times, arrival
 ETAs, walking notes, and any missing faculty/landmark mappings are clearly
-labelled **prototype simulations** rather than official live shuttle data.
+labelled **prototype estimates** rather than official live shuttle data.
 
 ---
 

@@ -19,7 +19,7 @@ TransitAI UTM uses public route names and stop sequences where available. Timeta
 | First bus / last bus / frequency | Prototype estimate | Generated from configured route operating windows and headways. |
 | Next bus time | Prototype estimate | Calculated from demo/live time and configured headway. |
 | ETA | Prototype estimate | Adjusted from timetable values; not live GPS. |
-| Delay alert | Prototype simulation | Triggered by the Staff Demo toggle to demonstrate the proof and notification flow. |
+| Delay alert | Prototype estimate | Triggered by the Staff Demo toggle to demonstrate the proof and notification flow. |
 | Walking notes | Prototype guidance | Helpful text for demo; should be verified before production use. |
 
 ## Sources recorded in the prototype

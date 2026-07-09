@@ -15,7 +15,7 @@ visible — it exposes the AI pipeline live.
    recognition, a knowledge base with RAG-style retrieval, conversation memory,
    and a logic engine for delay alerts. Everything runs offline. Route labels
    are aligned to public UTM/KDOJ route listings where available, while ETA and
-   headway values are labelled as prototype simulation.”
+   headway values are labelled as prototype estimates.”
 
 2. **Schedule inquiry (20s).** Tap **🕑 Next bus** (or type
    *“When is the next bus to FKE?”*). Point out: the **intent chip** shows
@@ -29,7 +29,7 @@ visible — it exposes the AI pipeline live.
    **conversation memory** for the destination.
 
 4. **Real-time arrival (15s).** Type *“When will the next bus arrive at CP?”* →
-   simulated ETA, clearly labelled **simulated** with a fallback note and demo
+   estimated ETA, clearly labelled with a fallback note and demo
    time basis.
 
 5. **Bus stop detail (10s).** Type *“Where is the FC bus stop?”* → opens the
