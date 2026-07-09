@@ -5,7 +5,7 @@
  *
  *  Data boundary: route labels and stop sequences are aligned to public
  *  UTM/DVC/KDOJ listings where available. Current operation, timetable,
- *  headway, ETA and walking notes are prototype simulation and must not be
+ *  headway, ETA and walking notes are configured prototype estimates and must not be
  *  presented as the official live UTM shuttle schedule.
  *
  *  Everything is held in a single global `KB` object so the app also runs by
@@ -176,7 +176,7 @@ const KB = {
   /* ---- Shuttle routes --------------------------------------------------- */
   /* Each route has an ordered stop sequence, operating window and a fixed
      headway (minutes between buses). "Next bus" times are derived from these
-     in nextDeparture() below — a deterministic simulation, not live GPS.     */
+     in nextDeparture() below: a deterministic estimate, not live GPS.        */
   routes: [
     { id: "route_a", name: "BAS A1/A2 — KP to Lingkaran Ilmu", color: "#1f6fd6",
       stops: ["kp", "cp", "jln_amal", "kp"],
@@ -250,7 +250,7 @@ const KB = {
   ],
   /* Delayed(r) facts, toggled from the Staff Demo panel. */
   delayedRoutes: [],
-  /* Delay duration used by the Staff Demo. This is deliberately a simulation,
+  /* Delay duration used by the Staff Demo. This is deliberately configured,
      not a live GPS prediction. */
   delayPolicy: {
     defaultMins: 12,
@@ -306,7 +306,7 @@ const KBUtil = {
     });
   },
 
-  /* ---- Deterministic schedule simulation ----------------------------- */
+  /* ---- Deterministic schedule estimate ------------------------------- */
   toMinutes(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; },
   fmt(mins) {
     mins = ((mins % 1440) + 1440) % 1440;
@@ -314,7 +314,7 @@ const KBUtil = {
     return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
   },
 
-  /* Current simulated campus time (uses the device clock — browser only). */
+  /* Current campus time basis (uses the device clock in live mode). */
   nowMinutes() {
     if (KB.clock.mode === "demo") return this.toMinutes(KB.clock.demoTime);
     const d = new Date(); return d.getHours() * 60 + d.getMinutes();
@@ -330,7 +330,7 @@ const KBUtil = {
     KB.clock.label = label || (mode === "live" ? "Live device time" : "Custom demo time");
   },
 
-  /* Next departure for a route at a stop. Returns schedule + simulated delay.
+  /* Next departure for a route at a stop. Returns schedule + delay-adjusted estimate.
      Buses leave the route origin every `headway` mins from start..end; the
      offset to a stop is its index position in the sequence (1 min/stop demo). */
   nextDeparture(route, stopId) {

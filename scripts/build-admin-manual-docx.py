@@ -175,6 +175,13 @@ def add_image(doc, file_name, caption, width=6.55):
 
 def build_docx():
     doc = Document()
+    props = doc.core_properties
+    props.title = "TransitAI UTM Administrator Manual"
+    props.subject = "Campus transport chatbot prototype administrator manual"
+    props.author = "MECS0033-52 Group 5"
+    props.last_modified_by = "MECS0033-52 Group 5"
+    props.comments = ""
+    props.keywords = "TransitAI UTM, campus transport, administrator manual"
     configure_document(doc)
 
     title = doc.add_paragraph()
@@ -243,7 +250,7 @@ def build_docx():
             ["FC mapping", "Prototype alias", "Mapped to N24 / Cluster Area for the report demo. Exact current FC shuttle-stop mapping was not found."],
             ["PSZ Library", "Landmark only", "The app can identify PSZ as a campus landmark, but it does not invent a direct shuttle route to PSZ."],
             ["Next bus, full-day timetable, service window, ETA and delay duration", "Prototype estimate", "Calculated from configured operating windows/headways and demo time. Not an official live timetable."],
-            ["Delay alert", "Prototype simulation", "Staff toggle simulates transport staff publishing a disruption so the logic proof and alert workflow can be shown."],
+            ["Delay alert", "Prototype estimate", "Staff toggle represents transport staff publishing a disruption so the logic proof and alert workflow can be shown."],
         ],
         widths=[Inches(2.05), Inches(1.1), Inches(3.45)],
     )

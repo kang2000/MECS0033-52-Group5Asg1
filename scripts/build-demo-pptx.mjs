@@ -1,18 +1,23 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import {
+const toolkitPath = process.env.TRANSITAI_PRESENTATION_TOOLKIT;
+if (!toolkitPath) {
+  throw new Error("Set TRANSITAI_PRESENTATION_TOOLKIT to the local presentation toolkit before running this optional deck generator.");
+}
+
+const {
   createSlideContext,
   ensureArtifactToolWorkspace,
   importArtifactTool,
   saveBlobToFile,
-} from "/Users/kang/.codex/plugins/cache/openai-primary-runtime/presentations/26.630.12135/skills/presentations/container_tools/artifact_tool_utils.mjs";
+} = await import(pathToFileURL(path.resolve(toolkitPath)).href);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const prototypeDir = path.resolve(here, "..");
-const workspace = path.join(os.tmpdir(), "codex-presentations", "transitai-utm-demo-deck");
+const workspace = path.join(os.tmpdir(), "transitai-presentations", "transitai-utm-demo-deck");
 const previewDir = path.join(workspace, "preview");
 const layoutDir = path.join(workspace, "layout");
 const output = path.join(prototypeDir, "TransitAI_UTM_Prototype_Demo.pptx");
@@ -182,7 +187,7 @@ async function scheduleSlide() {
   addCallout(slide, "Intent + confidence", { x: 880, y: 126, w: 292, h: 60 }, { x: 445, y: 180 }, { accent: MAROON, toSide: "right" });
   addCallout(slide, "Time basis shows demo clock", { x: 880, y: 236, w: 292, h: 72 }, { x: 420, y: 430 }, { accent: GOLD, toSide: "right" });
   addCallout(slide, "Source note protects data truth", { x: 880, y: 370, w: 292, h: 78 }, { x: 370, y: 575 }, { accent: OK, toSide: "right" });
-  addText(slide, { left: 878, top: 548, width: 320, height: 70, text: "Demo line: route/sequence is public-list aligned; timing and ETA are simulated POC data.", fontSize: 20, bold: true, color: INK, lineSpacing: 1.12 });
+  addText(slide, { left: 878, top: 548, width: 320, height: 70, text: "Demo line: route/sequence is public-list aligned; timing and ETA are configured prototype estimates.", fontSize: 20, bold: true, color: INK, lineSpacing: 1.12 });
 }
 
 async function routeSlide() {
@@ -196,9 +201,9 @@ async function routeSlide() {
 
 async function arrivalStopSlide() {
   const slide = baseSlide("Arrival and bus-stop screens answer different user needs");
-  await addScreenshot(slide, "04-arrival-simulated.png", 58, 122, 548, 366, "Arrival query.");
+  await addScreenshot(slide, "02-chat-schedule.png", 58, 122, 548, 366, "Arrival and schedule query.");
   await addScreenshot(slide, "05-bus-stop-detail.png", 678, 122, 548, 366, "Bus-stop detail query.");
-  addCallout(slide, "ETA is labelled simulated", { x: 86, y: 528, w: 290, h: 64 }, { x: 238, y: 313 }, { accent: MAROON, fromSide: "top", toSide: "bottom" });
+  addCallout(slide, "ETA source is labelled clearly", { x: 86, y: 528, w: 290, h: 64 }, { x: 238, y: 313 }, { accent: MAROON, fromSide: "top", toSide: "bottom" });
   addCallout(slide, "Data status prevents overclaiming", { x: 708, y: 528, w: 360, h: 64 }, { x: 850, y: 287 }, { accent: OK, fromSide: "top", toSide: "bottom" });
 }
 
@@ -233,7 +238,7 @@ async function alertsFeedbackSlide() {
 function dataTruthSlide() {
   const slide = baseSlide("Data truth statement for Q&A");
   addCard(slide, 76, 132, 520, 140, "Safe claim", "Route labels and many stop sequences are aligned to public UTM/DVC/KDOJ listings where available.", OK);
-  addCard(slide, 684, 132, 520, 140, "Do not overclaim", "Current operation, timetable, ETA, headway, delay state, and walking notes are simulated because no live verified feed is connected.", MAROON);
+  addCard(slide, 684, 132, 520, 140, "Do not overclaim", "Current operation, timetable, ETA, headway, delay state, and walking notes are configured estimates because no live verified feed is connected.", MAROON);
   addCard(slide, 76, 326, 520, 150, "Sources checked", "UTM DVC Development shuttle page\nKDOJ UTM Bus Schedule route list\nUTM JB 2025 shuttle timetable PDF", GOLD);
   addCard(slide, 684, 326, 520, 150, "Known caveat", "Some public effective-date fields are historical. The prototype therefore uses them only as public route/sequence references, not proof of current live operation.", BLACK);
   addText(slide, { left: 120, top: 560, width: 1040, height: 58, text: "This wording is what keeps the prototype truthful while still demonstrating the AI solution clearly.", fontSize: 28, bold: true, color: INK, align: "center" });
@@ -246,7 +251,7 @@ function closeSlide() {
     "Staff Demo -> Demo time -> 10:00",
     "Use quick actions for repeatable flows",
     "Keep AI pipeline panel visible",
-    "Say timing and ETA are simulated",
+    "Say timing and ETA are configured estimates",
   ]), MAROON);
   addCard(slide, 690, 130, 500, 390, "Show these scoring moments", bullets([
     "Schedule card: intent + time basis",

@@ -8,8 +8,15 @@ function loadPlaywright() {
   try {
     return localRequire("playwright");
   } catch {
-    const runtimeRequire = createRequire("/Users/kang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/");
-    return runtimeRequire("playwright");
+    const searchPaths = (process.env.NODE_PATH || "").split(path.delimiter).filter(Boolean);
+    for (const moduleDir of searchPaths) {
+      try {
+        return createRequire(path.join(moduleDir, "package.json"))("playwright");
+      } catch {
+        // Continue searching configured module paths.
+      }
+    }
+    throw new Error("Playwright is required. Install it locally or set NODE_PATH to a directory containing Playwright.");
   }
 }
 
@@ -40,7 +47,7 @@ const WAIT_SCALE = Number(process.env.TRANSITAI_VIDEO_WAIT_SCALE || 1);
 const TYPE_DELAY_MS = Number(process.env.TRANSITAI_VIDEO_TYPE_DELAY_MS || 75);
 
 const shotList = [
-  "Home: phone frame, status time, generated bus image, and main cards.",
+  "Home: phone frame, status time, bus hero image, and main cards.",
   "Chat: schedule question, route guidance, follow-up with conversation memory.",
   "Arrival and stop detail: ETA card, source note, and bus stop screen.",
   "Timetable: search FKE and open the full-day route timetable.",

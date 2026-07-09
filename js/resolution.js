@@ -15,7 +15,7 @@
  *
  * Unification and resolution are genuinely computed; the *order* of resolution
  * is fixed so the on-screen trace always matches the report and never misfires
- * on unexpected input (Codex-recommended controlled-deterministic design).
+ * on unexpected input.
  *
  * Literal representation:  { neg:Bool, pred:String, args:[Term] }
  * Term:                    { v:"r" }  (variable)   |  { c:"route_a" } (constant)
